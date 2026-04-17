@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Playfair_Display, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import AnimatedAura from '@/components/animated-aura'
+import { createJsonLdScript, getBusinessJsonLd } from '@/lib/json-ld'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -132,35 +133,7 @@ export default function RootLayout({
     <div className="relative z-10 min-h-screen">
 
     {/* SEO Schema (Google ke liye) */}
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "LocalBusiness",
-          name: "JK Interior",
-          url: "https://www.jkinterior.online",
-          telephone: "+918651070831",
-          address: {
-            "@type": "PostalAddress",
-            addressLocality: "Forbesganj",
-            addressRegion: "Bihar",
-            addressCountry: "IN"
-          },
-          areaServed: "Forbesganj, Araria, Bihar, India",
-          serviceType: [
-            "Gypsum Ceiling",
-            "POP Design",
-            "PVC Wall Panels",
-            "WPC Louvers",
-            "Grid Ceiling",
-            "Interior Design"
-          ],
-          description:
-            "JK Interior provides gypsum ceiling, POP design, PVC wall paneling and interior services in Forbesganj, Bihar."
-        })
-      }}
-    />
+    {createJsonLdScript(getBusinessJsonLd(), 'business-schema')}
 
     {children}
 

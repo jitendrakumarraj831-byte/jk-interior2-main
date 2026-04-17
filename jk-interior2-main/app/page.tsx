@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import dynamic from "next/dynamic"
 import Navbar from "@/components/navbar"
 import Hero from "@/components/hero"
+import ErrorBoundary from "@/components/ui/error-boundary"
 
 const Services = dynamic(() => import("@/components/services"), {
   loading: () => <div className="min-h-[28rem]" aria-hidden />,
@@ -85,11 +86,21 @@ export default function Home() {
     <main className="min-h-screen">
       <Navbar />
       <Hero />
-      <Services />
-      <ExperienceSection />
-      <ServiceAreas />
-      <Contact />
-      <Footer />
+      <ErrorBoundary>
+        <Services />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <ExperienceSection />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <ServiceAreas />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <Contact />
+      </ErrorBoundary>
+      <ErrorBoundary>
+        <Footer />
+      </ErrorBoundary>
     </main>
   )
 }

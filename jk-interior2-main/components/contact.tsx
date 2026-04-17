@@ -4,42 +4,96 @@ import { useState } from "react"
 import { Phone, Mail, MapPin, MessageCircle, Send, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { fadeSlideUp, fadeSlideUpItem, staggerContainer } from "@/components/motion-reveal"
+import { BUSINESS_CONTACT, VALIDATION_PATTERNS } from "@/lib/constants"
+import { createJsonLdScript, getBusinessJsonLd } from "@/lib/json-ld"
+
+interface FormData {
+  name: string
+  phone: string
+  service: string
+  message: string
+}
+
+interface FormErrors {
+  name?: string
+  phone?: string
+  message?: string
+}
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    phone: '',
+    service: 'False Ceiling (PVC/Gypsum)',
+    message: ''
+  })
+  const [errors, setErrors] = useState<FormErrors>({})
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {}
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required'
+    } else if (!VALIDATION_PATTERNS.name.test(formData.name.trim())) {
+      newErrors.name = 'Please enter a valid name (2-50 characters, letters only)'
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required'
+    } else if (!VALIDATION_PATTERNS.phone.test(formData.phone.trim())) {
+      newErrors.phone = 'Please enter a valid phone number (10-15 digits)'
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = 'Message is required'
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = 'Message must be at least 10 characters long'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+    // Clear error when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }))
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setIsSubmitting(true)
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000))
       alert("Message sent successfully! / संदेश सफलतापूर्वक भेज दिया गया!")
-    }, 2000)
+      // Reset form
+      setFormData({
+        name: '',
+        phone: '',
+        service: 'False Ceiling (PVC/Gypsum)',
+        message: ''
+      })
+    } catch (error) {
+      console.error('Error submitting form:', error)
+      alert('Error sending message. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <section id="contact" className="py-24 relative overflow-hidden">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            name: "JK Interior",
-            telephone: "+91-8541849118",
-            email: "jkinteriorofficial@gmail.com",
-            address: {
-              "@type": "PostalAddress",
-              streetAddress: "Forbesganj Dumariya",
-              addressLocality: "Forbesganj",
-              addressRegion: "Bihar",
-              postalCode: "854318",
-              addressCountry: "IN",
-            },
-            url: "https://jkinterior.online",
-          }),
-        }}
-      />
+      {createJsonLdScript(getBusinessJsonLd(), 'contact-schema')}
 
       <motion.div
         className="mx-auto max-w-7xl px-4"
@@ -83,11 +137,11 @@ export default function Contact() {
                 </div>
                 <h4 className="text-sm font-bold text-foreground mb-2">Call Us</h4>
                 <div className="flex flex-col gap-1 text-sm font-mono text-muted-foreground">
-                  <a href="tel:+918651070831" className="hover:text-gold transition-colors">
-                    +91 8651070831
+                  <a href={`tel:${BUSINESS_CONTACT.phone}`} className="hover:text-gold transition-colors">
+                    {BUSINESS_CONTACT.phoneFormatted}
                   </a>
-                  <a href="tel:+918541849118" className="hover:text-gold transition-colors">
-                    +91 8541849118
+                  <a href={`tel:${BUSINESS_CONTACT.phoneSecondary}`} className="hover:text-gold transition-colors">
+                    {BUSINESS_CONTACT.phoneSecondaryFormatted}
                   </a>
                 </div>
               </motion.div>
@@ -101,10 +155,10 @@ export default function Contact() {
                 </div>
                 <h4 className="text-sm font-bold text-foreground mb-2">Email Us</h4>
                 <a
-                  href="mailto:jkinteriorofficial@gmail.com"
+                  href={`mailto:${BUSINESS_CONTACT.email}`}
                   className="text-sm font-mono text-muted-foreground hover:text-gold break-all transition-colors"
                 >
-                  jkinteriorofficial@gmail.com
+                  {BUSINESS_CONTACT.email}
                 </a>
               </motion.div>
             </motion.div>
@@ -122,7 +176,7 @@ export default function Contact() {
                     Our Location
                   </h4>
                   <p className="text-muted-foreground font-medium text-sm">
-                    Forbesganj Dumariya, Araria, Bihar - 854318
+                    {BUSINESS_CONTACT.address.street}, {BUSINESS_CONTACT.address.city}, {BUSINESS_CONTACT.address.region} - {BUSINESS_CONTACT.address.postalCode}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     फोर्ब्सगंज दुमरिया, अररिया, बिहार
@@ -133,7 +187,7 @@ export default function Contact() {
 
             <motion.div variants={fadeSlideUpItem}>
               <a
-                href="https://wa.me/918651070831?text=Hello%20JK%20Interior%2C%20I%20am%20interested%20in%20your%20services."
+                href={`https://wa.me/${BUSINESS_CONTACT.phone.replace('+', '')}?text=Hello%20JK%20Interior%2C%20I%20am%20interested%20in%20your%20services.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="gold-gradient flex items-center justify-center gap-3 rounded-xl px-8 py-4 text-base font-bold text-primary-foreground btn-luxury-glow luxury-animated-shine transition-transform hover:scale-[1.02] active:scale-95"
@@ -173,22 +227,44 @@ export default function Contact() {
                     Your Name
                   </label>
                   <input
-                    required
+                    name="name"
                     type="text"
+                    value={formData.name}
+                    onChange={handleInputChange}
                     placeholder="Enter your name"
-                    className="w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all"
+                    className={`w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all ${
+                      errors.name ? 'border-red-500' : ''
+                    }`}
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? 'name-error' : undefined}
                   />
+                  {errors.name && (
+                    <p id="name-error" className="text-red-500 text-xs mt-1">
+                      {errors.name}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Phone Number
                   </label>
                   <input
-                    required
+                    name="phone"
                     type="tel"
+                    value={formData.phone}
+                    onChange={handleInputChange}
                     placeholder="Your contact number"
-                    className="w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all"
+                    className={`w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all ${
+                      errors.phone ? 'border-red-500' : ''
+                    }`}
+                    aria-invalid={!!errors.phone}
+                    aria-describedby={errors.phone ? 'phone-error' : undefined}
                   />
+                  {errors.phone && (
+                    <p id="phone-error" className="text-red-500 text-xs mt-1">
+                      {errors.phone}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -196,7 +272,12 @@ export default function Contact() {
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Select Service
                 </label>
-                <select className="w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all bg-transparent">
+                <select 
+                  name="service"
+                  value={formData.service}
+                  onChange={handleInputChange}
+                  className="w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all bg-transparent"
+                >
                   <option>False Ceiling (PVC/Gypsum)</option>
                   <option>PVC Wall Paneling</option>
                   <option>WPC Fluted Panels</option>
@@ -211,11 +292,22 @@ export default function Contact() {
                   Message
                 </label>
                 <textarea
-                  required
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
                   rows={4}
                   placeholder="How can we help you?"
-                  className="w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all resize-none"
+                  className={`w-full rounded-lg glass-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold/50 focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all resize-none ${
+                    errors.message ? 'border-red-500' : ''
+                  }`}
+                  aria-invalid={!!errors.message}
+                  aria-describedby={errors.message ? 'message-error' : undefined}
                 />
+                {errors.message && (
+                  <p id="message-error" className="text-red-500 text-xs mt-1">
+                    {errors.message}
+                  </p>
+                )}
               </div>
 
               <button

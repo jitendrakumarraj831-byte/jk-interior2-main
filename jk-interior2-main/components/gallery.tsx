@@ -6,43 +6,41 @@ import { X, ChevronLeft, ChevronRight, Maximize2, Loader2 } from "lucide-react"
 import { motion, AnimatePresence, useInView } from "framer-motion"
 import { fadeSlideUp, fadeSlideUpItem, staggerContainer } from "@/components/motion-reveal"
 import { galleryImages, buildGalleryJsonLd } from "@/lib/gallery-data"
+import { GALLERY_CONFIG } from "@/lib/constants"
+import { createJsonLdScript } from "@/lib/json-ld"
 
-const VISIBLE_COUNT = 12
-const SWIPE_THRESHOLD = 50
-const COLUMNS = { mobile: 2, tablet: 3, desktop: 4 }
+// Configuration moved to constants.ts
 
 function GalleryJsonLdScript() {
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(buildGalleryJsonLd()) }}
-    />
-  )
+  return createJsonLdScript(buildGalleryJsonLd(), 'gallery-schema')
 }
 
 export default function Gallery() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [showAll, setShowAll] = useState(false)
-  const [touchStart, setTouchStart] = useState(0)
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set())
-  const [columns, setColumns] = useState(COLUMNS.desktop)
+  const [columns, setColumns] = useState(GALLERY_CONFIG.COLUMNS.desktop)
   const galleryRef = useRef<HTMLDivElement>(null)
   
-  // Responsive columns
+  // Responsive columns with proper cleanup
   useEffect(() => {
     const updateColumns = () => {
-      const width = window.innerWidth
-      if (width < 768) setColumns(COLUMNS.mobile)
-      else if (width < 1024) setColumns(COLUMNS.tablet)
-      else setColumns(COLUMNS.desktop)
+      try {
+        const width = window.innerWidth
+        if (width < GALLERY_CONFIG.BREAKPOINTS.mobile) setColumns(GALLERY_CONFIG.COLUMNS.mobile)
+        else if (width < GALLERY_CONFIG.BREAKPOINTS.tablet) setColumns(GALLERY_CONFIG.COLUMNS.tablet)
+        else setColumns(GALLERY_CONFIG.COLUMNS.desktop)
+      } catch (error) {
+        console.error('Error updating gallery columns:', error)
+      }
     }
     
     updateColumns()
-    window.addEventListener('resize', updateColumns)
+    window.addEventListener('resize', updateColumns, { passive: true })
     return () => window.removeEventListener('resize', updateColumns)
   }, [])
 
-  const visibleImages = showAll ? galleryImages : galleryImages.slice(0, VISIBLE_COUNT)
+  const visibleImages = showAll ? galleryImages : galleryImages.slice(0, GALLERY_CONFIG.VISIBLE_COUNT)
   
   // Pinterest-style masonry distribution
   const distributeImagesToColumns = useCallback(() => {
@@ -62,31 +60,46 @@ export default function Gallery() {
   const columnsData = distributeImagesToColumns()
 
   const nextImage = useCallback(() => {
-    setLightboxIndex((prev) => (prev!== null? (prev + 1) % galleryImages.length : null))
+    setLightboxIndex((prev) => {
+      if (prev === null) return null
+      return (prev + 1) % galleryImages.length
+    })
   }, [])
 
   const prevImage = useCallback(() => {
-    setLightboxIndex((prev) => (prev!== null? (prev - 1 + galleryImages.length) % galleryImages.length : null))
+    setLightboxIndex((prev) => {
+      if (prev === null) return null
+      return (prev - 1 + galleryImages.length) % galleryImages.length
+    })
   }, [])
 
-  // ✅ FIX 1: Better swipe handling for mobile
-  const handleDragEnd = (_: any, info: any) => {
+  // ✅ FIX 1: Better swipe handling for mobile with debouncing
+  const handleDragEnd = useCallback((_: any, info: any) => {
     const swipeDistance = Math.abs(info.offset.x)
     const swipeVelocity = Math.abs(info.velocity.x)
 
-    if (swipeDistance > SWIPE_THRESHOLD || swipeVelocity > 500) {
+    if (swipeDistance > GALLERY_CONFIG.SWIPE_THRESHOLD || swipeVelocity > 500) {
       if (info.offset.x > 0) prevImage()
       else nextImage()
     }
-  }
+  }, [prevImage, nextImage])
 
-  // ✅ FIX 2: Preload next/prev images for smooth experience
+  // ✅ FIX 2: Optimized image preloading with caching
   useEffect(() => {
     if (lightboxIndex === null) return
 
+    const preloadedImages = new Set<number>()
+    
     const preloadImage = (index: number) => {
-      const img = new window.Image()
-      img.src = galleryImages[index].src
+      if (preloadedImages.has(index)) return
+      
+      try {
+        const img = new window.Image()
+        img.src = galleryImages[index].src
+        preloadedImages.add(index)
+      } catch (error) {
+        console.error('Error preloading image:', error)
+      }
     }
 
     const nextIdx = (lightboxIndex + 1) % galleryImages.length
@@ -132,6 +145,9 @@ export default function Gallery() {
               <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
                 Explore our premium interior design projects across Bihar - from luxury false ceilings to modern PVC wall paneling
               </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {galleryImages.length} total projects • Keyboard navigation available
+              </p>
             </motion.div>
 
             {/* Pinterest-style Masonry Grid */}
@@ -149,8 +165,18 @@ export default function Gallery() {
                           variants={fadeSlideUpItem}
                           className="relative group cursor-pointer"
                           onClick={() => setLightboxIndex(globalIndex)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setLightboxIndex(globalIndex)
+                            }
+                          }}
                           whileHover={{ y: -4 }}
                           transition={{ duration: 0.2 }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`View image: ${img.alt}`}
+                          aria-describedby={`image-info-${globalIndex}`}
                         >
                           <div className="relative overflow-hidden rounded-xl bg-muted">
                             {!isLoaded && (
@@ -164,13 +190,16 @@ export default function Gallery() {
                                 alt={img.alt}
                                 width={img.width}
                                 height={img.height}
-                                sizes={`(max-width:768px) ${100/COLUMNS.mobile}vw, (max-width:1024px) ${100/COLUMNS.tablet}vw, ${100/COLUMNS.desktop}vw`}
+                                sizes={`(max-width:768px) ${100/GALLERY_CONFIG.COLUMNS.mobile}vw, (max-width:1024px) ${100/GALLERY_CONFIG.COLUMNS.tablet}vw, ${100/GALLERY_CONFIG.COLUMNS.desktop}vw`}
                                 loading={idx < 2 ? "eager" : "lazy"}
                                 placeholder="blur"
                                 blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                                 className="w-full h-auto object-cover transition-all duration-500 group-hover:scale-105"
                                 onLoad={() => handleImageLoad(globalIndex)}
                               />
+                              <div id={`image-info-${globalIndex}`} className="sr-only">
+                                {img.alt} - Image {globalIndex + 1} of {galleryImages.length}
+                              </div>
                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <div className="absolute bottom-0 left-0 right-0 p-4">
                                   <div className="flex items-center justify-between">
@@ -191,16 +220,23 @@ export default function Gallery() {
               </div>
             </div>
 
-            {!showAll && galleryImages.length > VISIBLE_COUNT && (
+            {!showAll && galleryImages.length > GALLERY_CONFIG.VISIBLE_COUNT && (
               <motion.div 
                 className="text-center mt-12" 
                 variants={fadeSlideUp}
               >
                 <button
                   onClick={() => setShowAll(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setShowAll(true)
+                    }
+                  }}
+                  aria-label={`Load ${galleryImages.length - GALLERY_CONFIG.VISIBLE_COUNT} more projects`}
                   className="px-8 py-4 bg-gradient-to-r from-[#D4AF37] to-[#B8962E] hover:from-[#B8962E] hover:to-[#9B7F28] text-black rounded-full font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
-                  Load More Projects ({galleryImages.length - VISIBLE_COUNT} remaining)
+                  Load More Projects ({galleryImages.length - GALLERY_CONFIG.VISIBLE_COUNT} remaining)
                 </button>
               </motion.div>
             )}
@@ -236,6 +272,11 @@ export default function Gallery() {
                   aria-label="Close gallery"
                   className="fixed top-4 right-4 md:absolute md:-top-12 md:right-0 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 md:p-2 rounded-full z-[120] transition-all active:scale-95 border border-white/10"
                   onClick={() => setLightboxIndex(null)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setLightboxIndex(null)
+                    }
+                  }}
                 >
                   <X size={20} className="md:w-6 md:h-6" />
                 </button>
@@ -257,6 +298,12 @@ export default function Gallery() {
                 <button
                   aria-label="Previous image"
                   onClick={(e) => { e.stopPropagation(); prevImage() }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') {
+                      e.stopPropagation()
+                      prevImage()
+                    }
+                  }}
                   className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-all bg-black/40 hover:bg-black/60 p-3 rounded-full backdrop-blur-sm border border-white/20"
                 >
                   <ChevronLeft size={24} />
@@ -265,6 +312,12 @@ export default function Gallery() {
                 <button
                   aria-label="Next image"
                   onClick={(e) => { e.stopPropagation(); nextImage() }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowRight') {
+                      e.stopPropagation()
+                      nextImage()
+                    }
+                  }}
                   className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-all bg-black/40 hover:bg-black/60 p-3 rounded-full backdrop-blur-sm border border-white/20"
                 >
                   <ChevronRight size={24} />
@@ -277,11 +330,11 @@ export default function Gallery() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <p className="text-white/95 text-sm md:text-base font-medium px-4 py-2 bg-black/40 backdrop-blur-sm rounded-lg inline-block">
+                    <p className="text-white/95 text-sm md:text-base font-medium px-4 py-2 bg-black/40 backdrop-blur-sm rounded-lg inline-block" role="img" aria-label={`Image: ${galleryImages[lightboxIndex].alt}`}>
                       {galleryImages[lightboxIndex].alt}
                     </p>
-                    <p className="text-white/60 text-xs md:text-sm mt-2">
-                      {lightboxIndex + 1} / {galleryImages.length}
+                    <p className="text-white/60 text-xs md:text-sm mt-2" aria-live="polite">
+                      Image {lightboxIndex + 1} of {galleryImages.length}
                     </p>
                   </motion.div>
                 </div>

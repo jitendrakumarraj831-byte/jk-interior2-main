@@ -3,6 +3,7 @@
 import { MapPin, Navigation } from "lucide-react"
 import { motion } from "framer-motion"
 import { fadeSlideUp, fadeSlideUpItem, staggerContainer } from "@/components/motion-reveal"
+import { createJsonLdScript, getServiceAreasJsonLd } from "@/lib/json-ld"
 
 const areas = [
   "Forbesganj",
@@ -41,23 +42,7 @@ export default function ServiceAreas() {
         <div className="absolute left-1/2 top-1/2 h-[120%] w-[120%] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.12),transparent_55%)] blur-3xl" />
       </div>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "LocalBusiness",
-            name: "JK Interior",
-            areaServed: areas.map((area) => ({
-              "@type": "City",
-              name: area,
-              addressRegion: "Bihar",
-            })),
-            description:
-              "Premium Interior & False Ceiling services in Forbesganj, Araria, and surrounding Bihar regions.",
-          }),
-        }}
-      />
+      {createJsonLdScript(getServiceAreasJsonLd(areas), 'service-areas-schema')}
 
       <motion.div
         className="relative z-10 mx-auto max-w-7xl px-4"
