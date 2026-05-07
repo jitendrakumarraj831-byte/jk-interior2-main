@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.jkinterior.online'),
 
   // 🎯 Title & Description (SEO optimized)
-  title: 'JK Interior – PVC Wall Paneling & False Ceiling | Forbesganj, Bihar',
+  title: 'Best False Ceiling & Interior Designer in Araria | JK Interior',
   description:
-    'JK Interior offers expert PVC wall paneling, false ceiling, WPC louvers, and fluted panel installation in Forbesganj, Narpatganj, Jogbani, and Araria Bihar. Affordable price, modern designs & professional service. Call +91 8651070831.',
+    'JK Interior provides Gypsum False Ceiling, PVC Panel, WPC Wall Panel, Profile Light and Interior Design services in Araria, Purnia, Supaul and Forbesganj. Call +91 8651070831.',
 
   // 🔥 Powerful Local + Ranking Keywords
   keywords: [
@@ -73,9 +73,9 @@ export const metadata: Metadata = {
 
   // 5. OpenGraph (Social Media sharing ke liye)
   openGraph: {
-    title: 'JK Interior – Modern Interior & Ceiling Work Experts',
+    title: 'Best False Ceiling & Interior Designer in Araria | JK Interior',
     description:
-      'Premium interior design, WPC louvers, and PVC wall paneling solutions in Forbesganj, Narpatganj and across Bihar.',
+      'JK Interior provides Gypsum False Ceiling, PVC Panel, WPC Wall Panel, Profile Light and Interior Design services in Araria, Purnia, Supaul and Forbesganj.',
     url: 'https://www.jkinterior.online/',
     siteName: 'JK Interior',
     images: [
@@ -103,8 +103,8 @@ export const metadata: Metadata = {
   // 7. Twitter Card for social sharing
   twitter: {
     card: 'summary_large_image',
-    title: 'JK Interior – Best Interior Designer in Forbesganj Bihar',
-    description: 'Premium PVC wall paneling, false ceiling, and interior design services in Forbesganj, Araria, Bihar.',
+    title: 'Best False Ceiling & Interior Designer in Araria | JK Interior',
+    description: 'JK Interior provides Gypsum False Ceiling, PVC Panel, WPC Wall Panel, Profile Light and Interior Design services in Araria, Purnia, Supaul and Forbesganj.',
     images: ['https://www.jkinterior.online/og-image.jpg'],
   },
   // 8. Additional SEO meta tags

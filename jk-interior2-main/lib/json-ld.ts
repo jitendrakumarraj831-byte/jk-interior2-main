@@ -1,22 +1,21 @@
+import React from 'react'
 import { BUSINESS_CONTACT } from './constants'
 
 // Safe JSON-LD utility to prevent XSS
 export function createJsonLdScript(data: object, id?: string) {
   try {
-    // Validate that data is serializable and safe
     const jsonString = JSON.stringify(data)
-    
-    // Basic XSS prevention - check for script tags
+
     if (/<script|javascript:|on\w+=/i.test(jsonString)) {
       console.error('Unsafe content detected in JSON-LD data')
       return null
     }
 
-    return {
+    return React.createElement('script', {
       key: id || 'json-ld',
       type: 'application/ld+json',
-      dangerouslySetInnerHTML: { __html: jsonString }
-    }
+      dangerouslySetInnerHTML: { __html: jsonString },
+    })
   } catch (error) {
     console.error('Error creating JSON-LD script:', error)
     return null

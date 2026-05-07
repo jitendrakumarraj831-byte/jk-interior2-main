@@ -25,29 +25,30 @@ const Footer = dynamic(() => import("@/components/footer"), {
 })
 
 export const metadata: Metadata = {
-  title: "Best Interior Designer in Forbesganj Bihar | JK Interior",
+  title: "Best False Ceiling & Interior Designer in Araria | JK Interior",
   description:
-    "JK Interior provides gypsum ceiling, POP design, PVC wall paneling, WPC louvers, grid ceiling and home decor services in Forbesganj, Araria, Narpatganj, Jogbani, Raniganj, Kursakanta, Chhatapur and Tribeniganj.",
+    "JK Interior provides Gypsum False Ceiling, PVC Panel, WPC Wall Panel, Profile Light and Interior Design services in Araria, Purnia, Supaul and Forbesganj. Call +91 8651070831.",
   keywords: [
-    "interior designer Forbesganj",
-    "best interior designer near me",
-    "gypsum ceiling Forbesganj",
-    "false ceiling Bihar",
-    "POP ceiling design",
-    "PVC wall panel Bihar",
-    "WPC louvers design",
-    "grid ceiling work",
-    "home decor Forbesganj",
+    "false ceiling Araria",
+    "gypsum ceiling Purnia",
+    "PVC ceiling panel Supaul",
+    "WPC wall panel Bihar",
     "interior designer Araria",
+    "profile light design",
+    "modular TV unit Forbesganj",
+    "UV marble sheet Bihar",
+    "best interior designer near me",
     "JK Interior Bihar",
+    "false ceiling contractor Araria",
+    "home interior design Purnia",
   ],
   alternates: {
     canonical: "https://www.jkinterior.online",
   },
   openGraph: {
-    title: "Best Interior Designer in Forbesganj Bihar | JK Interior",
+    title: "Best False Ceiling & Interior Designer in Araria | JK Interior",
     description:
-      "JK Interior provides gypsum ceiling, POP design, PVC wall paneling, WPC louvers and home decor services in Forbesganj, Araria, Bihar.",
+      "JK Interior provides Gypsum False Ceiling, PVC Panel, WPC Wall Panel, Profile Light and Interior Design services in Araria, Purnia, Supaul and Forbesganj.",
     url: "https://www.jkinterior.online",
     siteName: "JK Interior",
     type: "website",
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
         url: "https://www.jkinterior.online/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Best Interior Designer in Forbesganj - JK Interior",
+        alt: "Best False Ceiling & Interior Designer in Araria - JK Interior",
       },
       {
         url: "https://www.jkinterior.online/images/hero-interior.jpg",
@@ -69,12 +70,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Interior Designer in Forbesganj Bihar | JK Interior",
+    title: "Best False Ceiling & Interior Designer in Araria | JK Interior",
     description:
-      "JK Interior provides gypsum ceiling, POP design, PVC wall paneling, WPC louvers and home decor services in Forbesganj, Araria, Bihar.",
+      "JK Interior provides Gypsum False Ceiling, PVC Panel, WPC Wall Panel, Profile Light and Interior Design services in Araria, Purnia, Supaul and Forbesganj.",
     images: ["https://www.jkinterior.online/og-image.jpg"],
   },
-  // Additional SEO meta
   authors: [{ name: "JK Interior" }],
   creator: "JK Interior",
   category: "home_and_garden",

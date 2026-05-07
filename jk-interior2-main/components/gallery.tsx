@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react"
 import Image from "next/image"
-import { X, ChevronLeft, ChevronRight, Maximize2, Loader2 } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Maximize2, Loader as Loader2 } from "lucide-react"
 import { motion, AnimatePresence, useInView } from "framer-motion"
 import { fadeSlideUp, fadeSlideUpItem, staggerContainer } from "@/components/motion-reveal"
 import { galleryImages, buildGalleryJsonLd } from "@/lib/gallery-data"
@@ -19,7 +19,7 @@ export default function Gallery() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [showAll, setShowAll] = useState(false)
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set())
-  const [columns, setColumns] = useState(GALLERY_CONFIG.COLUMNS.desktop)
+  const [columns, setColumns] = useState<number>(GALLERY_CONFIG.COLUMNS.desktop)
   const galleryRef = useRef<HTMLDivElement>(null)
   
   // Responsive columns with proper cleanup
@@ -44,16 +44,17 @@ export default function Gallery() {
   
   // Pinterest-style masonry distribution
   const distributeImagesToColumns = useCallback(() => {
-    const cols = Array.from({ length: columns }, () => [] as typeof galleryImages)
+    type ColumnItem = typeof galleryImages[number] & { originalIndex: number }
+    const cols = Array.from({ length: columns }, () => [] as ColumnItem[])
     const colHeights = Array(columns).fill(0)
-    
-    visibleImages.forEach((img, index) => {
+
+    visibleImages.forEach((img) => {
       const aspectRatio = img.width / img.height
       const shortestColIndex = colHeights.indexOf(Math.min(...colHeights))
       cols[shortestColIndex].push({ ...img, originalIndex: galleryImages.findIndex(i => i.src === img.src) })
       colHeights[shortestColIndex] += 1 / aspectRatio
     })
-    
+
     return cols
   }, [visibleImages, columns])
   
